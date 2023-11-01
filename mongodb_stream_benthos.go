@@ -197,11 +197,11 @@ func (m *mongoStreamInput) Read(ctx context.Context) (*service.Message, service.
 	snapshotMessage := <-m.stream
 	messageBodyEncoded, _ := json.Marshal(snapshotMessage)
 	createdMessage := service.NewMessage(messageBodyEncoded)
-	createdMessage.MetaSet("table", snapshotMessage["collection"])
-	createdMessage.MetaSet("schema", snapshotMessage["database"])
-	createdMessage.MetaSet("event", snapshotMessage["action"])
+	createdMessage.MetaSet("table", snapshotMessage["collection"].(string))
+	createdMessage.MetaSet("schema", snapshotMessage["database"].(string))
+	createdMessage.MetaSet("event", snapshotMessage["action"].(string))
 
-	return service.NewMessage(snapshotMessage), func(ctx context.Context, err error) error {
+	return createdMessage, func(ctx context.Context, err error) error {
 		return nil
 	}, nil
 }
