@@ -166,13 +166,19 @@ func (m *mongoStreamInput) processMessage(data map[string]interface{}) {
 		switch operation {
 		case "delete":
 			event["action"] = operation
+			event["database"] = m.database
+			event["collection"] = m.collection
 			event["data"] = data["documentKey"]
 		default:
 			event["action"] = operation
+			event["database"] = m.database
+			event["collection"] = m.collection
 			event["data"] = data["fullDocument"]
 		}
 	} else {
 		event["action"] = "insert"
+		event["database"] = m.database
+		event["collection"] = m.collection
 		event["data"] = data
 	}
 
