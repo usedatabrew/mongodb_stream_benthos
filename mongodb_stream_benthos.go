@@ -22,7 +22,7 @@ type mongoStreamInput struct {
 	database       string
 	collection     string
 	client         *mongo.Client
-	stream         chan []byte
+	stream         chan map[string]interface{}
 	streamSnapshot bool
 }
 
@@ -63,7 +63,7 @@ func newMongoStreamInput(conf *service.ParsedConfig) (service.Input, error) {
 		database:       database,
 		collection:     collection,
 		streamSnapshot: streamSnapshot,
-		stream:         make(chan []byte),
+		stream:         make(chan map[string]interface{}),
 	}), nil
 }
 
@@ -182,9 +182,7 @@ func (m *mongoStreamInput) processMessage(data map[string]interface{}) {
 		event["data"] = data
 	}
 
-	bytes, _ := json.Marshal(event)
-
-	m.stream <- bytes
+	m.stream <- event
 }
 
 func (m *mongoStreamInput) Close(ctx context.Context) error {
@@ -197,6 +195,12 @@ func (m *mongoStreamInput) Close(ctx context.Context) error {
 
 func (m *mongoStreamInput) Read(ctx context.Context) (*service.Message, service.AckFunc, error) {
 	snapshotMessage := <-m.stream
+	messageBodyEncoded, _ := json.Marshal(snapshotMessage)
+	createdMessage := service.NewMessage(messageBodyEncoded)
+	createdMessage.MetaSet("table", snapshotMessage["collection"])
+	createdMessage.MetaSet("schema", snapshotMessage["database"])
+	createdMessage.MetaSet("event", snapshotMessage["action"])
+
 	return service.NewMessage(snapshotMessage), func(ctx context.Context, err error) error {
 		return nil
 	}, nil
