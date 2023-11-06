@@ -195,7 +195,7 @@ func (m *mongoStreamInput) Close(ctx context.Context) error {
 
 func (m *mongoStreamInput) Read(ctx context.Context) (*service.Message, service.AckFunc, error) {
 	snapshotMessage := <-m.stream
-	messageBodyEncoded, _ := json.Marshal(snapshotMessage)
+	messageBodyEncoded, _ := json.Marshal(snapshotMessage["data"])
 	createdMessage := service.NewMessage(messageBodyEncoded)
 	createdMessage.MetaSet("table", snapshotMessage["collection"].(string))
 	createdMessage.MetaSet("schema", snapshotMessage["database"].(string))
